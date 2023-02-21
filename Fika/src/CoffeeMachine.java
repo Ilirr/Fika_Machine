@@ -18,11 +18,20 @@ public class CoffeeMachine implements Runnable
      public HashMap<String, Integer> producedCoffee;
      
      int drinkReserve;
+     
+     //Double check lock
      public synchronized static CoffeeMachine GetInstance()
      {
          if (single_instance == null)
-             single_instance = new CoffeeMachine();
-   
+         {
+        	 synchronized(CoffeeMachine.class)
+        	 {
+        		 if(single_instance == null)
+        		 {
+                     single_instance = new CoffeeMachine();
+        		 }
+        	 }
+         }   
          return single_instance;
      }       
      private CoffeeMachine()
@@ -34,6 +43,7 @@ public class CoffeeMachine implements Runnable
      public synchronized void QueueWorker(Worker worker)
      {
     	 workerQueue.add(worker);
+
      }
      public synchronized void ServeDrink(Worker worker)
      {
@@ -45,9 +55,16 @@ public class CoffeeMachine implements Runnable
     	 worker.Drink(key, value);
     	 
     	 drinkReserve--;
+    	 System.out.println("Coffee Machine has " + drinkReserve + " drinks in reserve.");
     	 if(worker.Energy < 100)
     	 {
     		 workerQueue.add(workerQueue.poll());
+    	 }
+    	 else
+    	 {
+    		 workerQueue.remove(worker);
+    		 System.out.println("REMOVED FROM QUEUE: " + worker.Name);
+    		 
     	 }
      }
      public synchronized void ProduceDrink()
@@ -73,14 +90,13 @@ public class CoffeeMachine implements Runnable
     	 }
     	 if(drinkIndex == 2)
     	 {  
-             drinkEnergy = random.nextInt(11) + 25;
+    		 drinkEnergy = random.nextInt(11) + 25;
     		 drinkType = "Latte";
     	 }
     	 drinkReserve++;
     	 producedCoffee.put(drinkType, drinkEnergy);
-    	 System.out.println("Produced a " + drinkType + ", energy level: " + drinkEnergy);
-    	 
-    	 
+    	 System.out.println("Drink created. " + "Coffee Machine has " + drinkReserve + " drinks in reserve.");
+    	// this.notifyAll();
      }
 	@Override
 	public void run() {
@@ -90,6 +106,7 @@ public class CoffeeMachine implements Runnable
 			{
 				if(!workerQueue.isEmpty() && drinkReserve > 0)
 				{
+					System.out.println("FIRST SERVE: " + workerQueue.peek().Name);
 
 					Worker worker = workerQueue.peek();
 					ServeDrink(worker);

@@ -1,10 +1,13 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 public class Fika 
 {
-	static List<Worker> workers = new ArrayList<Worker>();
+	static ArrayList<Worker> workers;
+	
+	static final int workerSpeed = 1000;
 
 	static String[] workerNames = {
 			"Erik",
@@ -16,11 +19,11 @@ public class Fika
 
 	public static void main(String[] args) throws InterruptedException
 	{
+		Collections.synchronizedCollection(new ArrayList<Worker>());
 		//Coffee Thread
 		CoffeeMachine machine = CoffeeMachine.GetInstance();
 		Thread coffeeThread = new Thread(machine::run);
 		coffeeThread.start();
-		
 		
 		//Create workers
 		List<Worker> workers = new ArrayList<Worker>();	
@@ -28,8 +31,8 @@ public class Fika
 		{
 			int energy = new Random().nextInt(61)+30;
 			int energyDecay = new Random().nextInt(1001) + 500;
-			Worker worker = new Worker(workerNames[i],energy,energyDecay);
-			worker.m_currentState = new WorkState();
+			State state = new WorkState();
+			Worker worker = new Worker(workerNames[i],energy,energyDecay, state);
 			workers.add(worker);
 		}	
 		
@@ -40,22 +43,25 @@ public class Fika
 			workerThreads[i] = new Thread(workers.get(i));
 			workerThreads[i].start();
 		}
+	/*	  for (Thread workerThread : workerThreads) {
+	            workerThread.join();
+	        }
+	        */
 		while(true)
 		{
-			Thread.sleep(1500);
-			for (Worker worker : workers)
+			synchronized(workers)
 			{
-				if(worker.m_currentState != null)
+				Thread.sleep(workerSpeed);
+				for (Worker worker : workers)
 				{
-					worker.m_currentState.Execute(worker);
+					if(worker.m_currentState != null)
+					{
+						worker.m_currentState.Execute(worker);
+					}
+					
 				}
-				
 			}
+			
 		}
 	}
-	public static void RemoveWorker(Worker worker)
-	{
-		workers.remove(worker);
-	}
-
 }
