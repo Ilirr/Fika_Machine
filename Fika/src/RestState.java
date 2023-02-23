@@ -9,19 +9,22 @@ public class RestState extends State
 	@Override
 	public void Execute(Worker worker)
 	{
-		System.out.println(worker.Name + " is taking a BREAK with energy level " + worker.Energy);
-		
 		if(worker.Rested())
 		{
 			worker.SetState(new WorkState());
 		}
-		if(worker.IsExhausted() == true)
+		else if(worker.IsExhausted() == true)
 		{	
 			System.out.println(worker.Name + " has gone home with energy level " + worker.Energy);
 			Fika.workers.remove(worker);
 			worker.StopThread();
 			
 		}
+		else
+		{
+			System.out.println(worker.Name + " is taking a break with energy level " + worker.Energy);			
+		}
+
 	}
 	@Override
 	public void Exit(Worker worker)
@@ -30,3 +33,4 @@ public class RestState extends State
 	}
 	
 }
+	

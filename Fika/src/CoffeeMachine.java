@@ -47,6 +47,7 @@ public class CoffeeMachine implements Runnable
      }
      public synchronized void ServeDrink(Worker worker)
      {
+    	 
     	 Random rand = new Random();
     	 int index = rand.nextInt(producedCoffee.size());
     	 String key = (String) producedCoffee.keySet().toArray()[index];
@@ -96,7 +97,7 @@ public class CoffeeMachine implements Runnable
     	 drinkReserve++;
     	 producedCoffee.put(drinkType, drinkEnergy);
     	 System.out.println("Drink created. " + "Coffee Machine has " + drinkReserve + " drinks in reserve.");
-    	// this.notifyAll();
+    	 
      }
 	@Override
 	public void run() {
@@ -123,7 +124,6 @@ public class CoffeeMachine implements Runnable
 			{
 				Thread.sleep(2000);
 				ProduceDrink();
-
 			} 
 			catch (InterruptedException e)
 			{

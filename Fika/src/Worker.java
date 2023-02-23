@@ -1,3 +1,4 @@
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Worker implements Runnable {
@@ -6,70 +7,92 @@ public class Worker implements Runnable {
 	public State m_currentState;
 
 	private volatile boolean threadRunning = true;
-	
-	Thread myThread;
-	
+
+	public Semaphore energySemaphore;
 	public int Energy;
 	public int energyDecay;
 
 	public Worker(String _name, int _energy, int _energyDecay, State _state) {
 		Name = _name;
 		Energy = _energy;
+		energySemaphore = new Semaphore(1);
 		energyDecay = _energyDecay;
 		m_currentState = _state;
 	}
 
-	public void StopThread() {
+	public synchronized void StopThread() {
 		threadRunning = false;
 	}
 
-	public void Drink(String drinkType, int drinkEnergy) 
+	public synchronized void Drink(String drinkType, int drinkEnergy) 
 	{
-		Energy = Math.min(100, drinkEnergy + Energy);
+		try 
+		{
+			energySemaphore.acquire();
+			Energy = Math.min(100, drinkEnergy + Energy);
+		}
+		catch(InterruptedException e)
+		{
+            e.printStackTrace();
+		}
+		finally {
+			energySemaphore.release();
+		}
 		System.out.println(Name + " enjoyed a " + drinkType + " with " + drinkEnergy + " energy");
 	}
 
-	public boolean IsWeak() {
+	public synchronized boolean IsWeak() {
 		if (Energy < 30 && IsExhausted() == false)
 			return true;
 		else
 			return false;
 	}
 
-	public boolean IsExhausted() {
+	public synchronized boolean IsExhausted() {
 		if (Energy <= 0)
 			return true;
 		else
 			return false;
 	}
 
-	public boolean Rested() {
+	public synchronized boolean Rested() {
 		if (Energy >= 100)
 			return true;
 		else
 			return false;
 	}
 
-	public void SetState(State newState) {
+	public synchronized void SetState(State newState) {
 		m_currentState.Exit(this);
 		m_currentState = newState;
 		m_currentState.Enter(this);
 	}
 
 	@Override
-	public void run() {
+	public void run()
+	{
 		while (threadRunning)
 		{
-			AtomicInteger myInt = new AtomicInteger(3);
-			myInt.getAndDecrement();
 			try 
 			{
-			
+				energySemaphore.acquire();
+				this.m_currentState.Execute(this);
+				Energy--;
+
+			}
+			catch (InterruptedException e) 
+			{
+				e.printStackTrace();
+			}
+			finally {
+				energySemaphore.release();
+			}
+			try 
+			{
 				Thread.sleep(energyDecay);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			Energy--;
 		}
 
 	}

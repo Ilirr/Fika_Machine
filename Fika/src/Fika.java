@@ -26,7 +26,7 @@ public class Fika
 		coffeeThread.start();
 		
 		//Create workers
-		List<Worker> workers = new ArrayList<Worker>();	
+		workers = new ArrayList<Worker>();	
 		for (int i = 0; i < workerNames.length; i++) 
 		{
 			int energy = new Random().nextInt(61)+30;
@@ -43,25 +43,24 @@ public class Fika
 			workerThreads[i] = new Thread(workers.get(i));
 			workerThreads[i].start();
 		}
-	/*	  for (Thread workerThread : workerThreads) {
-	            workerThread.join();
-	        }
-	        */
-		while(true)
+		for (Thread workerThread : workerThreads) 
 		{
-			synchronized(workers)
-			{
-				Thread.sleep(workerSpeed);
-				for (Worker worker : workers)
-				{
-					if(worker.m_currentState != null)
-					{
-						worker.m_currentState.Execute(worker);
-					}
+		    workerThread.join();
+		}
+	//	while(true)
+//		{
+			//synchronized(workers)
+			//{
+				//Thread.sleep(workerSpeed);
+				//for (Worker worker : workers)
+				//{
+					//if(worker.m_currentState != null)
+				//	{
+					//	worker.m_currentState.Execute(worker);
+					//}
 					
-				}
-			}
+			//	}
+		//	}
 			
 		}
-	}
 }
